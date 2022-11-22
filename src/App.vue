@@ -1,7 +1,8 @@
 <template>
   <div class="detector">
     <div id="capture">
-      <section v-for="(category, index) in categories" :key="index" class="card" >
+      <section v-for="(category, index) in categories" :key="index" class="card">
+        <div class="copy-btn" @click="copyText($event)"></div>
         <div class="title">
           <h1>{{ category.label }}</h1>
         </div>
@@ -14,7 +15,7 @@
       </section>
     </div>
     <div class="control">
-      <button v-if="clipable" class="btn capture" @click="capture(false)">截图至剪切板</button>
+      <button v-if="clipboardAvailable" class="btn capture" @click="capture(false)">截图至剪切板</button>
       <button class="btn capture" @click="capture(true)">截图并下载</button>
     </div>
   </div>
@@ -28,7 +29,7 @@ export default {
   name: 'Detector',
   data () {
     return {
-      clipable: typeof ClipboardItem !== 'undefined',
+      clipboardAvailable: typeof ClipboardItem !== 'undefined',
       categories: [
         {
           name: 'basic',
@@ -81,8 +82,8 @@ export default {
           result: ''
         },
         {
-          name: 'qcloudCDN',
-          label: '腾讯云CDN',
+          name: 'CDN',
+          label: 'CDN(s)',
           category: 'network',
           result: ''
         },
@@ -110,7 +111,7 @@ export default {
 
       this.whiteBoardAPI()
 
-      this.qcloudCDN()
+      this.CDN()
 
       this.bandwidth()
     },
@@ -133,12 +134,24 @@ export default {
       })
     },
 
-    qcloudCDN () {
-      const url = Config.QcloudCDN
-      utils.loadScript(url, (time) => {
-        this.setResult('qcloudCDN', `${parseInt(time)}ms`)
-      }, () => {
-        this.setResult('qcloudCDN', '<span class="red">请求失败</span>')
+    CDN () {
+      const url = Config.CDN
+      let length = 0
+      let plainHTML = ''
+      url.forEach(item => {
+        utils.loadScript(item, (time) => {
+          length++
+          plainHTML += `${item} | ${parseInt(time)}ms <br />`
+          if (length === url.length) {
+            this.setResult('CDN', plainHTML)
+          }
+        }, () => {
+          length++
+          plainHTML += `${item} | <span class="red">请求失败</span> <br />`
+          if (length === url.length) {
+            this.setResult('CDN', plainHTML)
+          }
+        })
       })
     },
 
@@ -160,6 +173,7 @@ export default {
         this.setResult('downloadNetSpeed', `${parseInt(speed)} ${unit}`)
       }, (err) => {
         console.error('error', err)
+        this.setResult('downloadNetSpeed', '<span class="red">请求失败</span>')
       })
 
       utils.uploadBandwidth(Config.UploadBandwidth, (speed, unit) => {
@@ -167,12 +181,12 @@ export default {
         this.setResult('uploadNetSpeed', `${parseInt(speed)} ${unit}`)
       }, (err) => {
         console.error('error', err)
+        this.setResult('uploadNetSpeed', '<span class="red">请求失败</span>')
       })
     },
 
     capture (download = false) {
       html2canvas(document.querySelector('#capture')).then((canvas) => {
-        // document.body.appendChild(canvas)
         if (download || typeof ClipboardItem === 'undefined') {
           const now = moment().format('YYYYMMDD_HHmmss')
           const link = document.createElement('a')
@@ -181,6 +195,7 @@ export default {
           link.click()
         } else {
           canvas.toBlob((blob) => {
+            // eslint-disable-next-line no-undef
             const item = new ClipboardItem({ 'image/png': blob })
             navigator.clipboard.write([item])
             this.$toast.open({
@@ -191,6 +206,26 @@ export default {
           })
         }
       })
+    },
+
+    copyText ($event) {
+      try {
+        const text = $event.target.parentElement.innerText
+        navigator.clipboard.writeText(text)
+        this.$toast.open({
+          type: 'info',
+          message: '已经复制到剪切板',
+          position: 'top'
+        })
+      } catch (e) {
+        console.error(e)
+        this.$toast.open({
+          type: 'info',
+          message: '已经复制到剪切板',
+          position: 'top'
+        })
+      }
+
     }
   }
 }
@@ -219,6 +254,7 @@ a {
   display: flex;
   overflow: hidden;
   font-family: 'Microsoft YaHei UI Light';
+  position: relative;
 }
 .title {
   background: rgba(42, 38, 94, 1);
@@ -277,6 +313,25 @@ a {
   opacity: 1;
 }
 
+.copy-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 20px;
+  height: 20px;
+  background: url(./assets/copy.png) no-repeat;
+  background-size: 100%;
+  cursor: pointer;
+  opacity: .8;
+}
+
+.copy-btn:hover {
+  opacity: .9;
+}
+.copy-btn:active {
+  opacity: 1;
+}
+
 @media only screen and (max-width: 600px) {
   .card {
     flex-direction: column;
@@ -291,6 +346,11 @@ a {
   .content {
     border-left: 1px solid rgba(42, 38, 94, 0.4);
     padding: 10px 0;
+  }
+  .copy-btn {
+    top: unset;
+    bottom: 10px;
+    right: 10px;
   }
 }
 </style>

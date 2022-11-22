@@ -2,8 +2,11 @@ export default {
   // 白板接口地址
   WhiteBoardApi: 'https://tiw.tencentcloudapi.com',
 
-  // 腾讯云CDN地址
-  QcloudCDN: 'https://demo.qcloudtiw.com/web/latest/index.html',
+  // CDN地址，支持多个
+  CDN: [
+    'https://demo.qcloudtiw.com/web/latest/index.html',
+    'https://demo.qcloudtiw.com/web/latest/ind2ex.html?v=2'
+  ],
 
   // 下载 - 用于下行带宽测速
   DownloadBandwidth: 'https://demo.qcloudtiw.com/android/TICDemo.zip',
