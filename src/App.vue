@@ -246,6 +246,9 @@ li {
 a {
   color: #42b983;
 }
+.detector {
+  text-align: center;
+}
 .card {
   width: 80%;
   max-width: 800px;
@@ -283,15 +286,13 @@ a {
   font-weight: bold;
   min-width: 80px;
 }
-.result {
-
-}
 .red {
   color: red;
 }
 
 #capture {
   padding: 20px;
+  display: inline-block;
 }
 
 .control {
