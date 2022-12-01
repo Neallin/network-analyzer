@@ -274,6 +274,7 @@ a {
   border-left: 0;
   font-size: 13px;
   padding: 20px 0;
+  text-align: left;
 }
 .detect-item{
   display: flex;
